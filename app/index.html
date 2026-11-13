@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ws://localhost:5173; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <title>AI 낙서 탐정</title>
+    <link rel="icon" href="./favicon.svg" />
+  </head>
+  <body data-screen="loading">
+    <div id="stage">
+      <!-- 준비 -->
+      <section class="screen" id="screen-loading" aria-live="polite">
+        <div class="center-col">
+          <div class="bot bot-big" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
+          <h1 id="loading-title">그림 친구를 깨우는 중이에요</h1>
+          <p id="loading-text" class="lead">잠시만 기다려 주세요.</p>
+          <div class="spinner" id="loading-spinner" aria-hidden="true"></div>
+          <button class="btn btn-primary" id="btn-retry" hidden>다시 준비하기</button>
+          <p class="diag-line" id="loading-diag" hidden></p>
+        </div>
+      </section>
+
+      <!-- 대기 -->
+      <section class="screen" id="screen-idle">
+        <div class="center-col">
+          <p class="eyebrow">부여 AI센터</p>
+          <h1 class="title">AI 낙서 탐정</h1>
+          <p class="lead">내가 그린 그림을 AI가 맞혀 볼까요?</p>
+          <svg class="doodle" viewBox="0 0 400 300" aria-hidden="true">
+            <path class="ink" d="M120 230 C 60 230 60 140 130 130 C 200 120 210 210 150 210 C 110 210 110 160 145 160 C 170 160 170 190 150 190" />
+            <path class="ink d2" d="M150 230 L 330 230 C 350 230 350 205 325 205 L 230 205" />
+            <path class="ink d3" d="M300 205 L 290 160 M 320 205 L 330 160" />
+            <circle class="ink d3" cx="290" cy="155" r="5" /><circle class="ink d3" cx="331" cy="155" r="5" />
+          </svg>
+          <p class="duration">약 3~5분 · 그림 5개</p>
+          <button class="btn btn-primary btn-hero" id="btn-start">체험 시작</button>
+        </div>
+      </section>
+
+      <!-- 터치 안내 -->
+      <section class="screen" id="screen-guide">
+        <div class="center-col">
+          <h1>이렇게 해요</h1>
+          <ol class="guide-steps">
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true"><path class="ink guide-ink" d="M15 70 C 30 30 50 30 55 55 S 80 80 88 35" /><circle cx="88" cy="35" r="9" class="finger" /></svg>
+              <div><strong>손가락 하나로 그려요</strong><span>도화지에 그림을 그려 주세요.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true"><path class="ink" d="M70 30 A 28 28 0 1 1 30 35" /><path class="ink" d="M22 22 L 30 36 L 44 28" /></svg>
+              <div><strong>틀리면 지워요</strong><span>한 획 지우기, 전체 지우기가 있어요.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true"><rect x="12" y="18" width="76" height="52" rx="14" class="ink" /><path class="ink" d="M30 70 L 26 88 L 46 70" /><circle cx="36" cy="44" r="5" class="dot" /><circle cx="50" cy="44" r="5" class="dot" /><circle cx="64" cy="44" r="5" class="dot" /></svg>
+              <div><strong>AI의 생각을 봐요</strong><span>선을 더할수록 AI의 예상이 바뀌어요.</span></div>
+            </li>
+          </ol>
+          <p class="note">AI는 정해진 20가지 그림 중에서 맞혀요.<br />한 그림에 30초, 모두 5문제예요.</p>
+          <button class="btn btn-primary btn-hero" id="btn-ready">준비됐어요</button>
+        </div>
+      </section>
+
+      <!-- 제시어 확인 -->
+      <section class="screen" id="screen-prompt">
+        <div class="center-col">
+          <p class="q-count" id="prompt-count">1번째 그림 / 5</p>
+          <p class="lead">이번에 그릴 그림은</p>
+          <p class="keyword" id="prompt-word">달팽이</p>
+          <p class="note">시작 버튼을 누르면 30초가 흘러요.<br />어려우면 건너뛰어도 괜찮아요.</p>
+          <button class="btn btn-primary btn-hero" id="btn-draw">그리기 시작</button>
+        </div>
+      </section>
+
+      <!-- 그림 그리기 -->
+      <section class="screen" id="screen-draw">
+        <header class="draw-head">
+          <span class="badge" id="draw-count">1 / 5</span>
+          <span class="draw-word" id="draw-word">달팽이</span>
+          <span class="timer" id="timer" role="timer"><span id="timer-num">30</span><small>초</small></span>
+        </header>
+        <div class="timebar"><div class="timebar-fill" id="timebar"></div></div>
+        <div class="ai-row">
+          <div class="bot" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
+          <div class="bubble">
+            <p id="bubble-text" aria-live="polite">몇 획 그려 주면 내가 맞혀 볼게!</p>
+            <div class="chips" id="chips"></div>
+          </div>
+        </div>
+        <div class="paper" id="paper">
+          <canvas id="pad"></canvas>
+          <div class="pause" id="pause" hidden>
+            <div class="spinner" aria-hidden="true"></div>
+            <p>그림 친구가 생각을 정리하고 있어요.<br />시간은 멈춰 있어요.</p>
+          </div>
+        </div>
+        <footer class="draw-foot">
+          <button class="btn" id="btn-undo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 12 L8 22 L18 32 M8 22 H30 a10 10 0 0 1 0 20 H22" /></svg>한 획 지우기</button>
+          <button class="btn" id="btn-clear"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 14 H38 M18 14 V8 H30 V14 M14 14 L16 42 H32 L34 14" /></svg>전체 지우기</button>
+          <button class="btn" id="btn-skip"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 10 L26 24 L10 38 Z M26 10 L42 24 L26 38 Z" /></svg>건너뛰기</button>
+        </footer>
+      </section>
+
+      <!-- 문제별 피드백 -->
+      <section class="screen" id="screen-feedback">
+        <div class="center-col">
+          <p class="q-count" id="fb-count">1번째 그림 / 5</p>
+          <div class="status-pill" id="fb-status">알아봤어요</div>
+          <h1 id="fb-title">AI가 알아봤어요!</h1>
+          <p class="keyword keyword-sm" id="fb-word">달팽이</p>
+          <div class="thumb-frame"><canvas id="fb-thumb" width="560" height="560"></canvas></div>
+          <p class="lead" id="fb-guess"></p>
+          <button class="btn btn-primary btn-hero" id="btn-next">다음 그림</button>
+          <p class="auto-note" id="fb-auto"></p>
+        </div>
+      </section>
+
+      <!-- 최종 결과 -->
+      <section class="screen" id="screen-result">
+        <div class="center-col">
+          <p class="eyebrow">오늘의 결과</p>
+          <h1 id="result-title">AI가 알아본 그림 3개</h1>
+          <p class="lead" id="result-error" hidden>그림 친구가 잠시 쉬어야 해요. 여기까지의 그림을 보여 줄게요.</p>
+          <div class="cards" id="cards"></div>
+          <div class="discovery">
+            <div class="bot" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
+            <div>
+              <strong>오늘의 발견</strong>
+              <p>AI는 사람들이 그린 여러 그림에서 특징을 배웠어요. 내가 특징을 더 그리면 예상이 달라질 수 있고, 익숙하지 않은 그림은 헷갈릴 수도 있어요.</p>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-again">다시 체험</button>
+            <button class="btn" id="btn-end">끝내기</button>
+          </div>
+          <p class="auto-note" id="result-auto"></p>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog" id="idle-dialog" hidden role="alertdialog" aria-labelledby="idle-title">
+      <div class="dialog-card">
+        <h2 id="idle-title">계속할까요?</h2>
+        <p><span id="idle-count">10</span>초 뒤 처음 화면으로 돌아가요.</p>
+        <button class="btn btn-primary btn-hero" id="btn-continue">계속하기</button>
+      </div>
+    </div>
+
+    <pre class="diag" id="diag" hidden></pre>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

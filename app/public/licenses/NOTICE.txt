@@ -1,0 +1,18 @@
+AI 낙서 탐정 - 사용한 데이터와 라이브러리
+
+[학습 데이터]
+The Quick, Draw! Dataset - Google Creative Lab
+https://github.com/googlecreativelab/quickdraw-dataset
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+  -> quickdraw-CC-BY-4.0.txt
+이 앱의 모델은 위 데이터의 단순화 획(simplified ndjson) 20개 분류로 학습했다.
+원본 그림은 앱에 포함하지 않는다. 학습 기록: training/ 폴더, app/public/model/bundle.json
+
+[실행 라이브러리]
+ONNX Runtime Web (onnxruntime-web) - Microsoft
+https://github.com/microsoft/onnxruntime
+License: MIT  -> onnxruntime-LICENSE.txt
+
+Electron - OpenJS Foundation and Electron contributors
+https://github.com/electron/electron
+License: MIT (설치 폴더의 LICENSE.electron.txt, LICENSES.chromium.html)

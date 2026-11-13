@@ -1,0 +1,189 @@
+{
+  "bundleFormat": 1,
+  "version": "qd20-v1",
+  "createdAt": "2026-11-13T03:03:49+00:00",
+  "model": {
+    "file": "model.onnx",
+    "sha256": "1d27e7926c6e69ccf72490cd95e0957dcea0da3255787ab0d8e122ec82e56848",
+    "bytes": 569269,
+    "input": {
+      "name": "input",
+      "shape": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "range": [
+        0,
+        1
+      ]
+    },
+    "output": {
+      "name": "probs",
+      "classes": 20,
+      "activation": "softmax"
+    }
+  },
+  "preprocess": {
+    "name": "qd-raster-v1",
+    "size": 28,
+    "pad": 2.0,
+    "halfWidth": 0.9,
+    "normalizeTo": 255.0,
+    "rdpEpsilon": 2.0
+  },
+  "labels": [
+    {
+      "index": 0,
+      "id": "strawberry",
+      "word": "딸기",
+      "source": "strawberry",
+      "level": "입문"
+    },
+    {
+      "index": 1,
+      "id": "mushroom",
+      "word": "버섯",
+      "source": "mushroom",
+      "level": "입문"
+    },
+    {
+      "index": 2,
+      "id": "grapes",
+      "word": "포도",
+      "source": "grapes",
+      "level": "입문"
+    },
+    {
+      "index": 3,
+      "id": "ice_cream",
+      "word": "아이스크림",
+      "source": "ice cream",
+      "level": "입문"
+    },
+    {
+      "index": 4,
+      "id": "umbrella",
+      "word": "우산",
+      "source": "umbrella",
+      "level": "쉬움"
+    },
+    {
+      "index": 5,
+      "id": "pineapple",
+      "word": "파인애플",
+      "source": "pineapple",
+      "level": "쉬움"
+    },
+    {
+      "index": 6,
+      "id": "hot_air_balloon",
+      "word": "열기구",
+      "source": "hot air balloon",
+      "level": "쉬움"
+    },
+    {
+      "index": 7,
+      "id": "snail",
+      "word": "달팽이",
+      "source": "snail",
+      "level": "쉬움"
+    },
+    {
+      "index": 8,
+      "id": "rabbit",
+      "word": "토끼",
+      "source": "rabbit",
+      "level": "보통"
+    },
+    {
+      "index": 9,
+      "id": "penguin",
+      "word": "펭귄",
+      "source": "penguin",
+      "level": "보통"
+    },
+    {
+      "index": 10,
+      "id": "guitar",
+      "word": "기타",
+      "source": "guitar",
+      "level": "보통"
+    },
+    {
+      "index": 11,
+      "id": "octopus",
+      "word": "문어",
+      "source": "octopus",
+      "level": "보통"
+    },
+    {
+      "index": 12,
+      "id": "sea_turtle",
+      "word": "바다거북",
+      "source": "sea turtle",
+      "level": "도전"
+    },
+    {
+      "index": 13,
+      "id": "elephant",
+      "word": "코끼리",
+      "source": "elephant",
+      "level": "도전"
+    },
+    {
+      "index": 14,
+      "id": "giraffe",
+      "word": "기린",
+      "source": "giraffe",
+      "level": "도전"
+    },
+    {
+      "index": 15,
+      "id": "firetruck",
+      "word": "소방차",
+      "source": "firetruck",
+      "level": "도전"
+    },
+    {
+      "index": 16,
+      "id": "helicopter",
+      "word": "헬리콥터",
+      "source": "helicopter",
+      "level": "어려움"
+    },
+    {
+      "index": 17,
+      "id": "crocodile",
+      "word": "악어",
+      "source": "crocodile",
+      "level": "어려움"
+    },
+    {
+      "index": 18,
+      "id": "bicycle",
+      "word": "자전거",
+      "source": "bicycle",
+      "level": "어려움"
+    },
+    {
+      "index": 19,
+      "id": "kangaroo",
+      "word": "캥거루",
+      "source": "kangaroo",
+      "level": "최종 도전"
+    }
+  ],
+  "successRule": {
+    "minScore": 0.75,
+    "minMargin": 0.2,
+    "holdMs": 600
+  },
+  "metrics": {
+    "testTop1": 0.9657374620437622,
+    "testMinRecall": 0.9335071444511414,
+    "valPartialTop1": 0.8334639668464661
+  },
+  "dataLicense": "Quick, Draw! Dataset by Google, CC BY 4.0"
+}

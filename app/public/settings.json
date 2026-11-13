@@ -1,0 +1,15 @@
+{
+  "_comment": "운영자 설정. 범위를 벗어난 값은 기본값으로 바뀌고 진단 화면(Ctrl+Shift+D)에 경고가 남습니다.",
+  "questionsPerRound": 5,
+  "drawSeconds": 30,
+  "feedbackAutoSeconds": 6,
+  "resultAutoSeconds": 45,
+  "idlePromptSeconds": 60,
+  "idleConfirmSeconds": 10,
+  "inferenceIntervalMs": 250,
+  "throttledIntervalMs": 500,
+  "throttleP95Ms": 150,
+  "stallPauseMs": 1000,
+  "stallFailMs": 5000,
+  "finalWaitMs": 1000
+}

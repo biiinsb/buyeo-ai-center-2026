@@ -1,0 +1,79 @@
+{
+  "name": "buyeo-ai-doodle-detective",
+  "productName": "AI 낙서 탐정",
+  "version": "0.1.0",
+  "private": true,
+  "description": "부여 AI센터 그림 맞히기 키오스크 (오프라인, 터치 전용)",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "postinstall": "node scripts/copy-ort.mjs && node node_modules/electron/install.js",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "vitest run",
+    "check": "tsc --noEmit && vitest run",
+    "kiosk": "npm run build && electron .",
+    "kiosk:window": "npm run build && electron . --windowed",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "dist": "npm run build && electron-builder --win --x64"
+  },
+  "dependencies": {
+    "onnxruntime-web": "1.31.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "electron": "45.3.1",
+    "electron-builder": "26.18.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "4.1.12"
+  },
+  "build": {
+    "appId": "kr.buyeo.aicenter.doodle",
+    "productName": "AI 낙서 탐정",
+    "artifactName": "doodle-detective-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/main.cjs",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "AI 낙서 탐정"
+    },
+    "portable": {
+      "artifactName": "doodle-detective-${version}-portable.exe"
+    },
+    "extraFiles": [
+      {
+        "from": "public/settings.json",
+        "to": "settings.json"
+      }
+    ],
+    "publish": null
+  }
+}
