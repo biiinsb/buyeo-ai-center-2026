@@ -9,6 +9,14 @@
 
 기획과 요구사항은 [docs/PRD.md](docs/PRD.md), 센터 PC 검토는 [docs/HARDWARE-ASSESSMENT.md](docs/HARDWARE-ASSESSMENT.md)에 있습니다.
 
+## 바로 해 보기 (체험판 HTML)
+
+[demo/ai-doodle-detective-demo.html](demo/ai-doodle-detective-demo.html) 파일 하나를 내려받아 더블클릭하면 Chrome이나 Edge에서 바로 실행됩니다. 설치나 인터넷이 필요 없고, 마우스나 터치로 그릴 수 있습니다.
+
+- 키오스크와 같은 화면, 게임 규칙, 모델(qd20-v1)을 씁니다.
+- 파일 하나에 담기 위해 추론만 ONNX Runtime 대신 순수 JavaScript로 계산합니다. 점수는 같고(테스트로 확인), 속도는 한 번에 약 40ms로 조금 느립니다.
+- 다시 만들기: `cd app && npm run demo`
+
 ## 센터 키오스크에 설치하기
 
 대상 PC: Intel i3-13100, RAM 8GB, 외장 그래픽카드 없음, Windows 10/11 64비트.

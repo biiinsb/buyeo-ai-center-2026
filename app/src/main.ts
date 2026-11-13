@@ -1,8 +1,9 @@
 import './styles.css';
 import { checkBundle, type ModelBundle } from './bundle';
-import { InferenceClient, type WorkerLike } from './inference/client';
+import { InferenceClient } from './inference/client';
 import type { Ranked } from './judge';
 import { DrawingPad, drawStrokes } from './pad';
+import { createWorker, loadMessage, readBundle, readSettings } from './platform';
 import type { Stroke } from './preprocess';
 import { QuestionSession, type GuessView, type Outcome, type QuestionEnd } from './question';
 import { drawQuestions, randomSeed } from './round';
@@ -135,7 +136,7 @@ const idle = (() => {
       if (left <= 0) {
         close();
         stats.bump('idleResets');
-        endRound(false);
+        endRound();
         show('idle');
       }
     }, 1000);
@@ -159,18 +160,13 @@ const idle = (() => {
 
 async function loadSettings(): Promise<void> {
   try {
-    const res = await fetch('./settings.json', { cache: 'no-store' });
-    const parsed = res.ok ? await res.json() : undefined;
-    ({ settings, warnings: settingsWarnings } = validateSettings(parsed));
-    if (!res.ok) settingsWarnings.push('settings.json 이 없어 기본값을 씁니다.');
+    const raw = await readSettings();
+    ({ settings, warnings: settingsWarnings } = validateSettings(raw.data));
+    if (!raw.found) settingsWarnings.push('settings.json 이 없어 기본값을 씁니다.');
   } catch (error) {
     settings = DEFAULT_SETTINGS;
     settingsWarnings = [`settings.json 을 읽지 못해 기본값을 씁니다: ${(error as Error).message}`];
   }
-}
-
-function createWorker(): WorkerLike {
-  return new Worker(new URL('./inference/worker.ts', import.meta.url), { type: 'module', name: 'inference' }) as unknown as WorkerLike;
 }
 
 async function prepare(): Promise<void> {
@@ -183,21 +179,13 @@ async function prepare(): Promise<void> {
   client?.dispose();
   client = null;
   try {
-    const res = await fetch('./model/bundle.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error(`bundle.json 을 읽지 못함 (${res.status})`);
-    bundle = checkBundle(await res.json());
+    bundle = checkBundle(await readBundle());
     const c = new InferenceClient(createWorker(), {
       intervalMs: settings.inferenceIntervalMs,
       throttledIntervalMs: settings.throttledIntervalMs,
       throttleP95Ms: settings.throttleP95Ms,
     });
-    const ready = await c.load({
-      type: 'load',
-      modelUrl: new URL(`./model/${bundle.model.file}`, document.baseURI).href,
-      sha256: bundle.model.sha256,
-      classes: bundle.model.output.classes,
-      ortBase: new URL('./ort/', document.baseURI).href,
-    });
+    const ready = await c.load(loadMessage(bundle));
     client = c;
     ortVersion = ready.ortVersion;
     lastReady = `load ${ready.loadMs.toFixed(0)}ms, warmup ${ready.warmupMs.toFixed(0)}ms`;
@@ -220,7 +208,7 @@ async function prepare(): Promise<void> {
 /* ---------- 회차 ---------- */
 
 function startRound(): void {
-  endRound(false);
+  endRound();
   const seed = randomSeed();
   round = {
     id: ++roundCounter,
@@ -237,16 +225,9 @@ function startRound(): void {
 }
 
 /** 회차 정리. 그림과 예측에 대한 참조를 모두 버린다. */
-function endRound(completed: boolean): void {
+function endRound(): void {
   question?.dispose();
   question = null;
-  if (round && completed) {
-    stats.bump(round.error ? 'roundsErrored' : 'roundsCompleted');
-    if (!round.error) {
-      stats.bump('roundMsSum', performance.now() - round.startedAt);
-      stats.bump('roundMsCount');
-    }
-  }
   round = null;
   pad.clear(true);
   $('cards').replaceChildren();
@@ -468,6 +449,13 @@ function nextQuestion(): void {
 
 function showResult(): void {
   const r = round!;
+  // 결과 화면에 도달하면 회차 완료로 센다(PRD 정상 완료율 정의).
+  stats.bump(r.error ? 'roundsErrored' : 'roundsCompleted');
+  if (!r.error) {
+    stats.bump('roundMsSum', performance.now() - r.startedAt);
+    stats.bump('roundMsCount');
+  }
+  stats.flush();
   const recognized = r.results.filter((x) => x.outcome === 'recognized').length;
   $('result-title').textContent = recognized ? `AI가 알아본 그림 ${recognized}개` : 'AI에게 어려운 그림들이었어요';
   $('result-error').hidden = !r.error;
@@ -495,7 +483,7 @@ function showResult(): void {
 function leaveResult(again: boolean): void {
   if (screen !== 'result') return;
   const hadError = round?.error ?? false;
-  endRound(true);
+  endRound();
   if (hadError) return void prepare(); // 오류 뒤에는 모델을 다시 준비한다
   if (again) startRound();
   else show('idle');
@@ -524,7 +512,7 @@ function renderDiag(): void {
     .join('\n');
   d.textContent = [
     `AI 낙서 탐정 진단   (Ctrl+Shift+D 닫기, Ctrl+Shift+X 통계 초기화)`,
-    `앱 ${__APP_VERSION__}  모델 ${bundle?.version ?? '-'}  onnxruntime-web ${ortVersion || '-'}  ${lastReady}`,
+    `앱 ${__APP_VERSION__}  모델 ${bundle?.version ?? '-'}  추론 엔진 ${ortVersion || '-'}  ${lastReady}`,
     `추론 간격 ${client?.intervalMs ?? '-'}ms  부하조절 ${client?.isThrottled ? '켜짐' : '꺼짐'}  최근 20회 P95 ${client?.recentP95.toFixed(1) ?? '-'}ms`,
     `설정 ${JSON.stringify(settings)}`,
     settingsWarnings.length ? `설정 경고:\n  ${settingsWarnings.join('\n  ')}` : '설정 경고 없음',

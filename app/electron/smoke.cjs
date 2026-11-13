@@ -89,7 +89,7 @@ module.exports = async function smoke(win, outDir) {
       await waitFor('prompt');
       if (q === 0) await shot('03-prompt');
       const word = await js(`document.getElementById('prompt-word').textContent`);
-      const bundle = await js(`fetch('./model/bundle.json').then(r => r.json())`);
+      const bundle = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'model', 'bundle.json'), 'utf8'));
       const label = bundle.labels.find((l) => l.word === word);
       await tap('btn-draw');
       await waitFor('draw');

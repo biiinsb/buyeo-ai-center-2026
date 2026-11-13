@@ -16,7 +16,8 @@
     "kiosk": "npm run build && electron .",
     "kiosk:window": "npm run build && electron . --windowed",
     "smoke": "npm run build && node scripts/smoke.mjs",
-    "dist": "npm run build && electron-builder --win --x64"
+    "dist": "npm run build && electron-builder --win --x64",
+    "demo": "tsc --noEmit && vite build --config vite.demo.config.ts && node -e \"require('fs').copyFileSync('dist-demo/ai-doodle-detective-demo.html','../demo/ai-doodle-detective-demo.html')\""
   },
   "devDependencies": {
     "@types/node": "24.19.2",

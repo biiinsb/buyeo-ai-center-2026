@@ -55,7 +55,7 @@ async function load(msg: Extract<ToWorker, { type: 'load' }>) {
     const sum = probs.reduce((a, b) => a + b, 0);
     if (!(Math.abs(sum - 1) < 1e-3) || !probs.every(Number.isFinite)) throw new Error(`시험 추론 결과 이상 (합 ${sum})`);
   }
-  post({ type: 'ready', loadMs, warmupMs: performance.now() - w0, ortVersion: ort.env.versions.web ?? 'unknown' });
+  post({ type: 'ready', loadMs, warmupMs: performance.now() - w0, ortVersion: `onnxruntime-web ${ort.env.versions.web ?? 'unknown'} (WASM)` });
 }
 
 self.onmessage = async (event: MessageEvent<ToWorker>) => {
