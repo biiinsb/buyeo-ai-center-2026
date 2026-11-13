@@ -12,7 +12,7 @@ import { StatsStore } from './stats';
 
 declare const __APP_VERSION__: string;
 
-type Screen = 'loading' | 'idle' | 'guide' | 'prompt' | 'draw' | 'feedback' | 'result';
+type Screen = 'loading' | 'idle' | 'intro' | 'guide' | 'prompt' | 'draw' | 'feedback' | 'result';
 
 interface QuestionResult {
   target: number;
@@ -93,7 +93,8 @@ function show(next: Screen): void {
   screen = next;
   document.body.dataset.screen = next;
   busy = false;
-  idle.arm(next === 'guide' || next === 'prompt');
+  // 그리기 화면은 첫 선을 긋기 전까지만 무조작 감시(시간이 흐르지 않으므로)
+  idle.arm(next === 'intro' || next === 'guide' || next === 'prompt' || next === 'draw');
 }
 
 /** 버튼은 손을 뗄 때(click) 동작하며, 그림을 그리는 중이거나 화면 전환 중이면 무시한다. */
@@ -207,7 +208,8 @@ async function prepare(): Promise<void> {
 
 /* ---------- 회차 ---------- */
 
-function startRound(): void {
+/** 새 회차. 처음 시작하면 머신러닝 소개부터, 다시 체험이면 게임 방법부터 보여 준다. */
+function startRound(withIntro = true): void {
   endRound();
   const seed = randomSeed();
   round = {
@@ -221,7 +223,7 @@ function startRound(): void {
   };
   client!.beginRound();
   stats.bump('roundsStarted');
-  show('guide');
+  show(withIntro ? 'intro' : 'guide');
 }
 
 /** 회차 정리. 그림과 예측에 대한 참조를 모두 버린다. */
@@ -231,7 +233,7 @@ function endRound(): void {
   round = null;
   pad.clear(true);
   $('cards').replaceChildren();
-  $<HTMLCanvasElement>('fb-thumb').getContext('2d')!.clearRect(0, 0, 560, 560);
+  paintThumb($<HTMLCanvasElement>('fb-thumb'), []);
   stats.flush();
 }
 
@@ -254,6 +256,8 @@ function startDrawing(): void {
   pad.resize();
   for (const id of ['btn-undo', 'btn-clear', 'btn-skip']) ($(id) as HTMLButtonElement).disabled = false;
   bubble.reset();
+  $('paper-hint').hidden = false;
+  $('timer').classList.add('waiting');
   stats.outcome(bundle!.labels[target].id, 'asked');
 
   const q = new QuestionSession({
@@ -263,6 +267,7 @@ function startDrawing(): void {
     durationMs: settings.drawSeconds * 1000,
     // 점수 기준은 모델 묶음, 유지 시간은 운영자 설정(그리는 시간을 넉넉히 주기 위해)을 따른다.
     rule: { ...bundle!.successRule, holdMs: settings.successHoldMs },
+    clockStartsOnFirstStroke: true,
     client: client!,
     stallPauseMs: settings.stallPauseMs,
     stallFailMs: settings.stallFailMs,
@@ -275,6 +280,11 @@ function startDrawing(): void {
         pad.setLocked(paused);
       },
       onLock: () => lockDrawing(),
+      onClockStart: () => {
+        $('paper-hint').hidden = true;
+        $('timer').classList.remove('waiting');
+        idle.arm(false);
+      },
       onEnd: (end) => finishQuestion(q, end),
     },
   });
@@ -486,14 +496,15 @@ function leaveResult(again: boolean): void {
   const hadError = round?.error ?? false;
   endRound();
   if (hadError) return void prepare(); // 오류 뒤에는 모델을 다시 준비한다
-  if (again) startRound();
+  if (again) startRound(false);
   else show('idle');
 }
 
 /* ---------- 버튼 ---------- */
 
 onTap('btn-retry', () => void prepare());
-onTap('btn-start', startRound);
+onTap('btn-start', () => startRound(true));
+onTap('btn-intro-next', () => show('guide'));
 onTap('btn-ready', showPrompt);
 onTap('btn-draw', startDrawing);
 onTap('btn-undo', () => pad.undo(), { once: false });
@@ -546,4 +557,17 @@ document.addEventListener('keydown', (e) => {
 /* ---------- 시작 ---------- */
 
 window.addEventListener('beforeunload', () => stats.flush());
-void loadSettings().then(prepare);
+function applyRuleText(): void {
+  const sec = String(settings.drawSeconds);
+  const hold = settings.successHoldMs / 1000;
+  $('rule-count').textContent = String(settings.questionsPerRound);
+  $('rule-seconds').textContent = sec;
+  $('rule-hold').textContent = Number.isInteger(hold) ? String(hold) : hold.toFixed(1);
+  $('prompt-note').innerHTML = `첫 선을 그으면 ${sec}초가 흘러요.<br />어려우면 건너뛰어도 괜찮아요.`;
+  $('paper-hint-sub').textContent = `첫 선을 그으면 ${sec}초가 시작돼요`;
+}
+
+void loadSettings().then(() => {
+  applyRuleText();
+  return prepare();
+});

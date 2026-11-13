@@ -29,6 +29,8 @@ export interface QuestionHooks {
   onPause(paused: boolean): void;
   onLock(): void;
   onEnd(end: QuestionEnd): void;
+  /** 제한 시간이 흐르기 시작한 순간(첫 선을 그었을 때). */
+  onClockStart?(): void;
 }
 
 export interface QuestionOptions {
@@ -47,6 +49,8 @@ export interface QuestionOptions {
   unsureBelow?: number;
   /** 후보 칩으로 보여 줄 최소 점수. */
   candidateMin?: number;
+  /** true 면 그리기 화면에 들어온 순간이 아니라 첫 선을 그은 순간부터 시간을 잰다. */
+  clockStartsOnFirstStroke?: boolean;
 }
 
 const TICK_MS = 100;
@@ -68,6 +72,7 @@ export class QuestionSession {
   private lastProbs: Float32Array | null = null;
   private lastSig = '';
   private startedAt = 0;
+  private clockRunning = false;
   private pausedTotal = 0;
   private pausedAt: number | null = null;
   private tick: ReturnType<typeof setInterval> | null = null;
@@ -88,17 +93,29 @@ export class QuestionSession {
     return this.pausedAt !== null;
   }
 
-  /** 그리기 시작 버튼을 누른 순간. */
+  /** 그리기 화면에 들어온 순간. 시계는 바로 또는 첫 선에서 시작한다. */
   start(): void {
-    this.startedAt = this.now();
     this.o.client.onResult = (r) => this.handleResult(r);
     this.o.client.onError = (m) => this.end('error', m);
     this.o.hooks.onView({ kind: 'empty', candidates: [] });
     this.o.hooks.onTime(this.o.durationMs);
     this.tick = setInterval(() => this.onTick(), TICK_MS);
+    if (!this.o.clockStartsOnFirstStroke) this.startClock();
+  }
+
+  get isClockRunning(): boolean {
+    return this.clockRunning;
+  }
+
+  private startClock(): void {
+    if (this.clockRunning) return;
+    this.clockRunning = true;
+    this.startedAt = this.now();
+    this.o.hooks.onClockStart?.();
   }
 
   remainingMs(): number {
+    if (!this.clockRunning) return this.o.durationMs;
     const paused = this.pausedTotal + (this.pausedAt !== null ? this.now() - this.pausedAt : 0);
     return Math.max(0, this.o.durationMs - (this.now() - this.startedAt - paused));
   }
@@ -109,6 +126,7 @@ export class QuestionSession {
     const sig = signature(strokes);
     if ((kind === 'add' || kind === 'penUp') && sig === this.lastSig) return;
     this.lastSig = sig;
+    if (strokes.length) this.startClock();
     this.strokes = strokes;
     this.version++;
     if (kind === 'undo' || kind === 'clear') {
@@ -175,7 +193,7 @@ export class QuestionSession {
   }
 
   private onTick(): void {
-    if (this.ended || this.finalizing) return;
+    if (this.ended || this.finalizing || !this.clockRunning) return;
     const now = this.now();
     const since = this.o.client.inFlightSince;
     if (since !== null && now - since > this.o.stallFailMs) return this.end('error', '추론 지연이 복구되지 않음');

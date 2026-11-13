@@ -1,4 +1,6 @@
+/* 브라우저 강제 다크 모드가 도화지를 어둡게 바꾸지 않도록 밝은 화면으로 고정 */
 :root {
+  color-scheme: only light;
   --bg: #fff8ef;
   --paper: #ffffff;
   --ink: #1f2340;
@@ -50,6 +52,7 @@ html, body {
 .screen { position: absolute; inset: 0; display: none; padding: 72px 60px; }
 body[data-screen='loading'] #screen-loading,
 body[data-screen='idle'] #screen-idle,
+body[data-screen='intro'] #screen-intro,
 body[data-screen='guide'] #screen-guide,
 body[data-screen='prompt'] #screen-prompt,
 body[data-screen='draw'] #screen-draw,
@@ -156,7 +159,7 @@ h2 { font-size: 52px; margin: 0; }
 
 .paper { position: relative; width: 960px; height: 960px; margin: 0 auto; background: var(--paper); border: 4px solid var(--line); border-radius: 40px; overflow: hidden; box-shadow: 0 12px 36px rgba(60, 40, 20, 0.08); }
 .paper.locked { border-color: var(--violet); }
-#pad { width: 100%; height: 100%; display: block; touch-action: none; }
+#pad { width: 100%; height: 100%; display: block; touch-action: none; background: #fff; }
 .pause { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center; }
 .pause p { font-size: 40px; font-weight: 700; line-height: 1.5; margin: 0; }
 .draw-foot { display: flex; gap: 24px; margin-top: auto; }
@@ -195,3 +198,28 @@ h2 { font-size: 52px; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* 머신러닝 소개 */
+.learn-steps li { padding: 24px 36px; }
+.learn-steps span { line-height: 1.5; display: block; }
+.learn-steps .tile { fill: #f4efe6; }
+.learn-steps .thin { stroke-width: 3; }
+.learn-steps .pixels rect:not(.tile) { fill: var(--ink); animation: pix 3s ease-in-out infinite; }
+.learn-steps .lens { stroke: var(--violet); fill: rgba(123, 92, 214, 0.08); }
+.learn-steps .bar { fill: #e2dcf5; }
+.learn-steps .bar-1 { fill: var(--violet); }
+.learn-steps .check { stroke: var(--ok); }
+@keyframes pix { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.callout { width: 900px; font-size: 36px; line-height: 1.5; margin: 0; padding: 26px 40px; border-radius: 32px; background: #f1ecff; color: var(--ink); }
+.callout b { color: var(--violet); }
+
+/* 게임 규칙 */
+.rules { list-style: none; margin: 0; padding: 28px 40px; width: 900px; background: var(--paper); border: 3px dashed var(--line); border-radius: 32px; text-align: left; display: flex; flex-direction: column; gap: 14px; }
+.rules li { font-size: 34px; line-height: 1.4; padding-left: 44px; position: relative; }
+.rules li::before { content: ''; position: absolute; left: 6px; top: 16px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); }
+.rules b { color: var(--accent-dark); }
+
+/* 도화지 안내: 첫 선을 긋기 전에만 보인다 */
+.paper-hint { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-size: 52px; font-weight: 800; color: #d9d2c6; pointer-events: none; }
+.paper-hint small { font-size: 34px; font-weight: 700; color: var(--violet); opacity: 0.75; }
+.timer.waiting { color: var(--muted); }

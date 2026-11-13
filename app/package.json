@@ -1,7 +1,7 @@
 {
   "name": "buyeo-ai-doodle-detective",
   "productName": "AI 낙서 탐정",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "부여 AI센터 그림 맞히기 키오스크 (오프라인, 터치 전용)",
   "type": "module",

@@ -10,7 +10,7 @@ const TARGET = 7; // 달팽이
 const OTHER = 4; // 우산
 const line = (n = 1): Stroke[] => Array.from({ length: n }, (_, i) => [[0, i * 40], [100, i * 40 + 10]]);
 
-function setup(over: Partial<{ durationMs: number; holdMs: number }> = {}) {
+function setup(over: Partial<{ durationMs: number; holdMs: number; firstStroke: boolean }> = {}) {
   const worker = new FakeWorker();
   const now = () => Date.now();
   const client = new InferenceClient(worker, { intervalMs: 250, throttledIntervalMs: 500, throttleP95Ms: 150, now });
@@ -18,6 +18,7 @@ function setup(over: Partial<{ durationMs: number; holdMs: number }> = {}) {
   const views: GuessView[] = [];
   const pauses: boolean[] = [];
   let locked = false;
+  let clockStarts = 0;
   const q = new QuestionSession({
     roundId: 1,
     questionId: 0,
@@ -29,16 +30,18 @@ function setup(over: Partial<{ durationMs: number; holdMs: number }> = {}) {
     stallFailMs: 5000,
     finalWaitMs: 1000,
     now,
+    clockStartsOnFirstStroke: over.firstStroke,
     hooks: {
       onView: (v) => views.push(v),
       onTime: () => {},
       onPause: (p) => pauses.push(p),
       onLock: () => (locked = true),
       onEnd: (e) => ends.push(e),
+      onClockStart: () => clockStarts++,
     },
   });
   q.start();
-  return { worker, client, q, ends, views, pauses, isLocked: () => locked };
+  return { worker, client, q, ends, views, pauses, isLocked: () => locked, clockStarts: () => clockStarts };
 }
 
 beforeEach(() => vi.useFakeTimers({ now: 1_000_000 }));
@@ -259,5 +262,38 @@ describe('추론 대기열', () => {
     }
     client.beginRound();
     expect(client.isThrottled).toBe(false);
+  });
+});
+
+describe('첫 선부터 시간 재기', () => {
+  it('첫 선을 긋기 전에는 시간이 흐르지 않는다', () => {
+    const { q, ends, clockStarts } = setup({ firstStroke: true });
+    vi.advanceTimersByTime(60000);
+    expect(q.remainingMs()).toBe(30000);
+    expect(ends).toHaveLength(0);
+    expect(clockStarts()).toBe(0);
+  });
+
+  it('첫 선을 그은 순간부터 30초가 지나면 끝난다', async () => {
+    const { worker, q, ends, clockStarts } = setup({ firstStroke: true });
+    vi.advanceTimersByTime(10000); // 제시어를 보며 망설이는 시간
+    q.drawingChanged([[[0, 0]]], 'add'); // 첫 접촉
+    expect(clockStarts()).toBe(1);
+    q.drawingChanged(line(), 'penUp');
+    worker.respondLast(probs(OTHER, 0.5));
+    vi.advanceTimersByTime(29000);
+    expect(ends).toHaveLength(0);
+    expect(q.remainingMs()).toBeLessThanOrEqual(1000);
+    vi.advanceTimersByTime(1100);
+    worker.respondLast(probs(OTHER, 0.5));
+    await vi.runOnlyPendingTimersAsync();
+    expect(ends[0]?.outcome).toBe('timeout');
+    expect(clockStarts()).toBe(1);
+  });
+
+  it('선을 긋기 전에도 건너뛸 수 있다', () => {
+    const { q, ends } = setup({ firstStroke: true });
+    q.skip();
+    expect(ends[0]?.outcome).toBe('skipped');
   });
 });

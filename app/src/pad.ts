@@ -22,10 +22,14 @@ export function capPoints(strokes: Point[][], max = MAX_POINTS): Point[][] {
   return out;
 }
 
-export function drawStrokes(ctx: CanvasRenderingContext2D, strokes: readonly Stroke[], width: number, height: number, srcW: number, srcH: number, lineWidth: number, color: string): void {
+export const PAPER_COLOR = '#ffffff';
+
+/** 획을 다시 그린다. 배경은 투명으로 비우지 않고 흰색으로 칠한다(일부 그래픽 환경에서 투명 캔버스가 검게 보이는 문제 방지). */
+export function drawStrokes(ctx: CanvasRenderingContext2D, strokes: readonly Stroke[], width: number, height: number, srcW: number, srcH: number, lineWidth: number, color: string, background: string = PAPER_COLOR): void {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, width, height);
   const s = Math.min(width / srcW, height / srcH);
   ctx.translate((width - srcW * s) / 2, (height - srcH * s) / 2);
   ctx.scale(s, s);
@@ -60,11 +64,14 @@ export class DrawingPad {
   private cssW = 0;
   private cssH = 0;
   private scale = 1;
-  readonly lineWidth = 9;
+  /** 펜 굵기(도화지 960px 기준). 화면 표시용이며 AI 입력은 굵기와 무관하게 같은 규칙으로 만든다. */
+  readonly lineWidth = 16;
   readonly color = '#1f2340';
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly maxBitmap = 1080) {
-    this.ctx = canvas.getContext('2d', { desynchronized: true })!;
+    // desynchronized(저지연) 캔버스는 일부 그래픽 드라이버에서 배경이 검게 보여 쓰지 않는다.
+    // alpha:false 로 불투명 캔버스를 만들고 항상 흰색으로 칠한다.
+    this.ctx = canvas.getContext('2d', { alpha: false })!;
     canvas.addEventListener('pointerdown', (e) => this.down(e));
     canvas.addEventListener('pointermove', (e) => this.move(e));
     canvas.addEventListener('pointerup', (e) => this.up(e));
@@ -234,7 +241,11 @@ export class DrawingPad {
   }
 
   private redraw(): void {
-    if (!this.cssW) return;
+    if (!this.cssW) {
+      this.ctx.fillStyle = PAPER_COLOR;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      return;
+    }
     drawStrokes(this.ctx, this.snapshot(), this.canvas.width, this.canvas.height, this.cssW, this.cssH, this.lineWidth, this.color);
   }
 }

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ws://localhost:5173; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta name="color-scheme" content="only light" />
     <title>AI 낙서 탐정</title>
     <link rel="icon" href="./favicon.svg" />
   </head>
@@ -38,9 +39,50 @@
         </div>
       </section>
 
+      <!-- 머신러닝 소개 -->
+      <section class="screen" id="screen-intro">
+        <div class="center-col">
+          <p class="eyebrow">시작하기 전에</p>
+          <h1>AI는 그림을 어떻게<br />알아볼까요?</h1>
+          <ol class="guide-steps learn-steps">
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <rect x="6" y="6" width="26" height="26" rx="6" class="tile" /><rect x="37" y="6" width="26" height="26" rx="6" class="tile" /><rect x="68" y="6" width="26" height="26" rx="6" class="tile" />
+                <rect x="6" y="37" width="26" height="26" rx="6" class="tile" /><rect x="37" y="37" width="26" height="26" rx="6" class="tile" /><rect x="68" y="37" width="26" height="26" rx="6" class="tile" />
+                <rect x="6" y="68" width="26" height="26" rx="6" class="tile" /><rect x="37" y="68" width="26" height="26" rx="6" class="tile" /><rect x="68" y="68" width="26" height="26" rx="6" class="tile" />
+                <circle cx="19" cy="19" r="7" class="ink thin" /><path class="ink thin" d="M42 26 L50 11 L58 26 Z" /><path class="ink thin" d="M73 24 C 76 10 88 10 89 24" />
+                <path class="ink thin" d="M11 56 L19 43 L27 56" /><circle cx="50" cy="50" r="4" class="ink thin" /><path class="ink thin" d="M73 50 H 89 M 81 42 V 58" />
+                <path class="ink thin" d="M11 81 H 27" /><path class="ink thin" d="M42 88 C 44 72 56 72 58 88" /><rect x="74" y="74" width="14" height="14" class="ink thin" />
+              </svg>
+              <div><strong>① 많이 보고 배워요</strong><span>사람들이 그린 그림 <b>30만 장</b>을 보면서 딸기는 씨앗과 꼭지, 기린은 긴 목처럼 그림마다의 특징을 배웠어요.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <g class="pixels"><rect x="10" y="10" width="56" height="56" rx="4" class="tile" />
+                <rect x="24" y="17" width="7" height="7" /><rect x="31" y="17" width="7" height="7" /><rect x="38" y="17" width="7" height="7" /><rect x="17" y="24" width="7" height="7" /><rect x="45" y="24" width="7" height="7" />
+                <rect x="17" y="31" width="7" height="7" /><rect x="45" y="31" width="7" height="7" /><rect x="24" y="38" width="7" height="7" /><rect x="31" y="38" width="7" height="7" /><rect x="38" y="38" width="7" height="7" />
+                <rect x="31" y="45" width="7" height="7" /><rect x="31" y="52" width="7" height="7" /></g>
+                <circle cx="62" cy="62" r="18" class="ink lens" /><path class="ink" d="M75 75 L 92 92" />
+              </svg>
+              <div><strong>② 특징을 찾아요</strong><span>내 그림을 작은 칸 그림(28×28)으로 바꾸고, 배운 특징이 어디에 있는지 살펴봐요.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <rect x="10" y="16" width="70" height="16" rx="6" class="bar bar-1" /><rect x="10" y="42" width="34" height="16" rx="6" class="bar" /><rect x="10" y="68" width="18" height="16" rx="6" class="bar" />
+                <path class="ink check" d="M80 24 L 86 30 L 96 16" />
+              </svg>
+              <div><strong>③ 가장 비슷한 것을 골라요</strong><span>20가지 그림 중 가장 비슷한 것을 골라 말해요. 처음 보는 모양이면 헷갈리기도 해요.</span></div>
+            </li>
+          </ol>
+          <p class="callout">데이터를 보고 스스로 규칙을 배우는 방법을<br /><b>머신러닝</b>이라고 해요.</p>
+          <button class="btn btn-primary btn-hero" id="btn-intro-next">게임 방법 보기</button>
+        </div>
+      </section>
+
       <!-- 터치 안내 -->
       <section class="screen" id="screen-guide">
         <div class="center-col">
+          <p class="eyebrow">게임 방법</p>
           <h1>이렇게 해요</h1>
           <ol class="guide-steps">
             <li>
@@ -56,7 +98,12 @@
               <div><strong>AI의 생각을 봐요</strong><span>선을 더할수록 AI의 예상이 바뀌어요.</span></div>
             </li>
           </ol>
-          <p class="note">AI는 정해진 20가지 그림 중에서 맞혀요.<br />한 그림에 30초, 모두 5문제예요.</p>
+          <ul class="rules">
+            <li>제시어 <b id="rule-count">5</b>개가 무작위로 나와요.</li>
+            <li>첫 선을 그으면 <b id="rule-seconds">30</b>초가 시작돼요.</li>
+            <li>AI의 예상이 <b id="rule-hold">2</b>초 동안 제시어로 이어지면 성공!</li>
+            <li>어려우면 건너뛰어도 괜찮아요.</li>
+          </ul>
           <button class="btn btn-primary btn-hero" id="btn-ready">준비됐어요</button>
         </div>
       </section>
@@ -67,7 +114,7 @@
           <p class="q-count" id="prompt-count">1번째 그림 / 5</p>
           <p class="lead">이번에 그릴 그림은</p>
           <p class="keyword" id="prompt-word">달팽이</p>
-          <p class="note">시작 버튼을 누르면 30초가 흘러요.<br />어려우면 건너뛰어도 괜찮아요.</p>
+          <p class="note" id="prompt-note">첫 선을 그으면 30초가 흘러요.<br />어려우면 건너뛰어도 괜찮아요.</p>
           <button class="btn btn-primary btn-hero" id="btn-draw">그리기 시작</button>
         </div>
       </section>
@@ -89,6 +136,7 @@
         </div>
         <div class="paper" id="paper">
           <canvas id="pad"></canvas>
+          <p class="paper-hint" id="paper-hint">여기에 그려요<small id="paper-hint-sub">첫 선을 그으면 30초가 시작돼요</small></p>
           <div class="pause" id="pause" hidden>
             <div class="spinner" aria-hidden="true"></div>
             <p>그림 친구가 생각을 정리하고 있어요.<br />시간은 멈춰 있어요.</p>

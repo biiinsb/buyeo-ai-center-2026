@@ -30,7 +30,7 @@ module.exports = async function smoke(win, outDir) {
   const wc = win.webContents;
   const js = (code) => wc.executeJavaScript(code);
   const screen = () => js('document.body.dataset.screen');
-  const shot = async (name) => fs.writeFileSync(path.join(outDir, `${name}.png`), (await wc.capturePage()).toPNG());
+  const shot = async (name) => (await sleep(450), 0) || fs.writeFileSync(path.join(outDir, `${name}.png`), (await wc.capturePage()).toPNG());
   const waitFor = async (name, timeout = 20000) => {
     const end = Date.now() + timeout;
     while (Date.now() < end) {
@@ -82,6 +82,9 @@ module.exports = async function smoke(win, outDir) {
     await waitFor('idle', 30000);
     await shot('01-idle');
     await tap('btn-start');
+    await waitFor('intro');
+    await shot('02-intro');
+    await tap('btn-intro-next');
     await waitFor('guide');
     await shot('02-guide');
     await tap('btn-ready');
