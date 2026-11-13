@@ -1,6 +1,6 @@
 /**
  * 단일 HTML 체험판 빌드: npm run demo -> dist-demo/ai-doodle-detective-demo.html
- * - './platform' 을 platform-demo.ts 로 바꾼다(모델 내장, 순수 JS 추론 Worker 인라인).
+ * - './platform' 을 platform-demo.ts 로 바꾼다(모델 내장, 페이지 안 순수 JS 추론).
  * - JS, CSS, Worker 를 HTML 한 파일에 넣는다. 더블클릭해서 브라우저로 열면 동작한다.
  */
 import { readFileSync } from 'node:fs';
@@ -23,7 +23,7 @@ function swapPlatform(): Plugin {
 }
 
 const DEMO_CSP =
-  "default-src 'none'; script-src 'unsafe-inline' blob:; worker-src blob: data:; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'";
+  "default-src 'none'; script-src 'unsafe-inline'; worker-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'";
 
 /** 문자열 그대로 찾기 위해 정규식 특수문자를 이스케이프한다. */
 const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, (m) => '\\' + m);
