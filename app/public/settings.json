@@ -11,5 +11,6 @@
   "throttleP95Ms": 150,
   "stallPauseMs": 1000,
   "stallFailMs": 5000,
-  "finalWaitMs": 1000
+  "finalWaitMs": 1000,
+  "successHoldMs": 2000
 }

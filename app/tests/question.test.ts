@@ -10,7 +10,7 @@ const TARGET = 7; // 달팽이
 const OTHER = 4; // 우산
 const line = (n = 1): Stroke[] => Array.from({ length: n }, (_, i) => [[0, i * 40], [100, i * 40 + 10]]);
 
-function setup(over: Partial<{ durationMs: number }> = {}) {
+function setup(over: Partial<{ durationMs: number; holdMs: number }> = {}) {
   const worker = new FakeWorker();
   const now = () => Date.now();
   const client = new InferenceClient(worker, { intervalMs: 250, throttledIntervalMs: 500, throttleP95Ms: 150, now });
@@ -23,7 +23,7 @@ function setup(over: Partial<{ durationMs: number }> = {}) {
     questionId: 0,
     target: TARGET,
     durationMs: over.durationMs ?? 30000,
-    rule: RULE,
+    rule: { ...RULE, holdMs: over.holdMs ?? RULE.holdMs },
     client,
     stallPauseMs: 1000,
     stallFailMs: 5000,
@@ -73,6 +73,19 @@ describe('문제 진행', () => {
     expect(ends).toHaveLength(0);
     vi.advanceTimersByTime(2);
     expect(ends).toEqual([expect.objectContaining({ outcome: 'recognized', lastGuess: TARGET })]);
+  });
+
+  it('유지 시간 2초: 그리는 동안 정답 예상이 2초 이어져야 성공한다', () => {
+    const { worker, q, ends } = setup({ holdMs: 2000 });
+    q.drawingChanged(line(1), 'penUp');
+    worker.respondLast(probs(TARGET, 0.9));
+    vi.advanceTimersByTime(1000);
+    q.drawingChanged(line(2), 'penUp'); // 계속 그림
+    worker.respondLast(probs(TARGET, 0.85));
+    vi.advanceTimersByTime(999);
+    expect(ends).toHaveLength(0);
+    vi.advanceTimersByTime(2);
+    expect(ends[0]?.outcome).toBe('recognized');
   });
 
   it('AC08: 손가락을 뗀 뒤 새 획 없이도 유지 시간이 지나면 성공한다', () => {

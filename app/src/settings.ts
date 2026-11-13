@@ -15,6 +15,8 @@ export interface Settings {
   stallPauseMs: number;
   stallFailMs: number;
   finalWaitMs: number;
+  /** 정답 예상이 이만큼 이어져야 그리는 중 성공으로 본다. 모델 묶음의 holdMs 를 대신한다. */
+  successHoldMs: number;
 }
 
 type Range = readonly [min: number, max: number, integer: boolean];
@@ -32,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   stallPauseMs: 1000,
   stallFailMs: 5000,
   finalWaitMs: 1000,
+  successHoldMs: 2000,
 };
 
 const RANGES: Record<keyof Settings, Range> = {
@@ -47,6 +50,7 @@ const RANGES: Record<keyof Settings, Range> = {
   stallPauseMs: [300, 5000, true],
   stallFailMs: [1000, 30000, true],
   finalWaitMs: [200, 5000, true],
+  successHoldMs: [0, 10000, true],
 };
 
 export function validateSettings(input: unknown): { settings: Settings; warnings: string[] } {

@@ -12,6 +12,10 @@ describe('운영자 설정 검사', () => {
     expect(settings.feedbackAutoSeconds).toBe(6);
     expect(warnings).toHaveLength(3);
   });
+  it('성공 유지 시간은 0~10초', () => {
+    expect(validateSettings({ successHoldMs: 3500 }).settings.successHoldMs).toBe(3500);
+    expect(validateSettings({ successHoldMs: 20000 }).settings.successHoldMs).toBe(2000);
+  });
   it('부하 조절 간격이 기본 간격보다 짧으면 맞춘다', () => {
     const { settings } = validateSettings({ inferenceIntervalMs: 400, throttledIntervalMs: 300 });
     expect(settings.throttledIntervalMs).toBe(400);

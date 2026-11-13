@@ -261,7 +261,8 @@ function startDrawing(): void {
     questionId: r.index,
     target,
     durationMs: settings.drawSeconds * 1000,
-    rule: bundle!.successRule,
+    // 점수 기준은 모델 묶음, 유지 시간은 운영자 설정(그리는 시간을 넉넉히 주기 위해)을 따른다.
+    rule: { ...bundle!.successRule, holdMs: settings.successHoldMs },
     client: client!,
     stallPauseMs: settings.stallPauseMs,
     stallFailMs: settings.stallFailMs,
